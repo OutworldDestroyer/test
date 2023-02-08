@@ -74,7 +74,6 @@ def download_images(ad):
 		num = 1
 		for image in images:
 			image_src = image.get_attribute("data-src")
-			print(image_src)
 			response = requests.get(image_src)
 			if response.status_code == 200:
 				with open(os.path.join(image_dir,"image"+str(num)+".jpg"), 'wb') as f:
@@ -111,12 +110,9 @@ def main(start_page=1,end_page=4):
 			ad[name] = get_by_xpath(name,xpath,ad)
 		count += 1
 		process(ad)
-		print(count)
-		print(ad)
 		new_ads.append(ad)
 	new_data["ads"] = new_ads
 	dump_data()
-	print(new_data)
 	driver.close()
 
 if __name__ == '__main__':
