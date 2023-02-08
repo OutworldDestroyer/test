@@ -18,7 +18,7 @@ xpathes = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	"color":'//*[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
 	"power":'//*[@class="sc-font-bold"][contains(text(),"Leistung")]/following-sibling::div'}
 
-url = "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage="
+url_part = "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage="
 
 current_dir  = os.getcwd()
 data_dir = os.path.join(current_dir,"data")
@@ -99,7 +99,7 @@ def main(start_page=1,end_page=4):
 	count = 0
 	for i in range (start_page,end_page+1):
 		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""}
-		driver.get(url+str(i))
+		driver.get(url_part+str(i))
 		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a')
 		href = item.get_attribute('href')
 		driver.get(href)
