@@ -9,7 +9,7 @@ import json
 import os 
 import requests
 
-data = {}
+new_data = {}
 new_ads = []
 
 xpathes = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
@@ -18,7 +18,7 @@ xpathes = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	"color":'//*[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
 	"power":'//*[@class="sc-font-bold"][contains(text(),"Leistung")]/following-sibling::div'}
 
-url_part = "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage="
+url_part = "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #часть ссылки без номера страницы
 
 current_dir  = os.getcwd()
 data_dir = os.path.join(current_dir,"data")
@@ -44,7 +44,7 @@ def process(ad):
 		ad["power"] = int(ad["power"][:ad["power"].find('k')].strip())
 
 
-def get_by_xpath(name,xpath,ad):
+def get_by_xpath(name,xpath,ad): #функция возвращает текст элемента по xpath
 	try:
 		elem=driver.find_element(By.XPATH,xpath).get_attribute('innerText')
 	except NoSuchElementException:
@@ -55,7 +55,7 @@ def get_by_xpath(name,xpath,ad):
 
 def get_description():
 	description = ""
-	raw_description = driver.find_elements(By.CSS_SELECTOR,'[data-type="description"]')
+	raw_description = driver.find_elements(By.CSS_SELECTOR,'[data-type="description"]') #необработанный список элементов описания
 	if raw_description:
 		for paragraph in raw_description: #\xa0\n
 			paragraph = paragraph.get_attribute("innerText")
@@ -69,10 +69,10 @@ def download_images(ad):
 	if not os.path.exists(image_dir):
 		os.mkdir(image_dir)
 		images = []
-		for i in range(1,4):
+		for i in range(1,4): #получаем src первых 3 изображений
 			images.append(driver.find_element(By.XPATH,f'//*[@id="detpics"]/as24-pictures/div/div[2]/div/as24-carousel[1]/div[1]/div[{i}]/div/img'))
 		num = 1
-		for image in images:
+		for image in images: # скачиваем изображения
 			image_src = image.get_attribute("data-src")
 			response = requests.get(image_src)
 			if response.status_code == 200:
@@ -81,23 +81,26 @@ def download_images(ad):
 			num += 1
 
 def dump_data():
-	data["ads"] = new_ads
+	new_data["ads"] = new_ads
 	if os.path.exists(json_dir):
 		with open(json_dir,"r") as file:
-			old_data = json.load(file)
-			data.update(old_data)
-	with open(json_dir,"w") as file:
-		json.dump(data,file)
+			data = json.load(file)
+			data.update(new_data)
+		with open(json_dir,"w") as file:
+			json.dump(data,file)
+	else:
+		with open(json_dir,"w") as file:
+			json.dump(new_data,file)
+
 
 
 def main(start_page=1,end_page=4):
 	if not os.path.exists(data_dir):
 		os.mkdir(data_dir)
-	count = 0
 	for i in range (start_page,end_page+1):
-		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""}
+		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""} #пустое начальное объявление
 		driver.get(url_part+str(i))
-		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a')
+		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a') #первое объявление на странице
 		href = item.get_attribute('href')
 		driver.get(href)
 		ad["href"] = href
@@ -105,7 +108,6 @@ def main(start_page=1,end_page=4):
 		download_images(ad)
 		for name,xpath in xpathes.items():
 			ad[name] = get_by_xpath(name,xpath,ad)
-		count += 1
 		process(ad)
 		new_ads.append(ad)
 	dump_data()
@@ -113,8 +115,5 @@ def main(start_page=1,end_page=4):
 
 if __name__ == '__main__':
 	main()
-
-
-
 
 
