@@ -12,7 +12,7 @@ import requests
 new_data = {}
 new_ads = []
 
-xpath = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
+xpathes = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	,"price":'//*[@id="content-container-root"]/div[2]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/h2',
 	"mileage":'//*[@class="itemval"][contains(text(),"km")]',
 	"color":'//*[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
@@ -74,7 +74,6 @@ def download_images(ad):
 		num = 1
 		for image in images:
 			image_src = image.get_attribute("data-src")
-			print(image_src)
 			response = requests.get(image_src)
 			if response.status_code == 200:
 				with open(os.path.join(image_dir,"image"+str(num)+".jpg"), 'wb') as f:
@@ -107,16 +106,13 @@ def main(start_page=1,end_page=4):
 		ad["href"] = href
 		ad["description"] = get_description()
 		download_images(ad)
-		for name,path in xpath.items():
+		for name,xpath in xpathes.items():
 			ad[name] = get_by_xpath(name,path,ad)
 		count += 1
 		process(ad)
-		print(count)
-		print(ad)
 		new_ads.append(ad)
 	new_data["ads"] = new_ads
 	dump_data()
-	print(new_data)
 	driver.close()
 
 if __name__ == '__main__':
