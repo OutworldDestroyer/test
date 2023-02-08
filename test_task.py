@@ -25,11 +25,10 @@ url = "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/
 
 current_dir  = os.getcwd()
 data_dir = os.path.join(current_dir,"data")
-json_dir = os.path.join(current_dir,"data","data.json")
+json_dir = os.path.join(data_dir,"data.json")
 	
 options = Options()
 options.add_argument("--headless")
-options.add_argument("disable-gpu")
 options.add_argument('--ignore-certificate-errors')
 	
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -64,7 +63,6 @@ def download_images(images,ad):
 		num = 1
 		for image in images:
 			image_src = image.get_attribute("data-src")
-			print(image_src)
 			response = requests.get(image_src)
 			if response.status_code == 200:
 				with open(os.path.join(images_dir,"image"+str(num)+".jpg"), 'wb') as f:
@@ -76,7 +74,6 @@ def download_images(images,ad):
 def get_info(num_pages):
 	if not os.path.exists(data_dir):
 		os.mkdir(data_dir)
-	count = 0
 	for i in range (1,num_pages+1):
 		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""}
 		driver.get(url+str(i))
@@ -87,7 +84,6 @@ def get_info(num_pages):
 		images = []
 		for i in range(1,4):
 			images.append(driver.find_element(By.XPATH,f'//*[@id="detpics"]/as24-pictures/div/div[2]/div/as24-carousel[1]/div[1]/div[{i}]/div/img'))
-		print(images)
 		download_images(images,ad)
 		description = ""
 		raw_description = driver.find_elements(By.CSS_SELECTOR,'[data-type="description"]')
@@ -100,10 +96,7 @@ def get_info(num_pages):
 		ad["description"] = description
 		for name,path in xpath.items():
 			ad[name] = get_by_xpath(name,path,ad)
-		count += 1
 		process(ad)
-		print(count)
-		print(ad)
 		new_ads.append(ad)
 		new_data["ads"] = new_ads
 	
