@@ -9,7 +9,7 @@ import json
 import os 
 import requests
 
-new_data = {}
+data = {}
 new_ads = []
 
 xpathes = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
@@ -81,16 +81,13 @@ def download_images(ad):
 			num += 1
 
 def dump_data():
-	new_data["ads"] = new_ads
+	data["ads"] = new_ads
 	if os.path.exists(json_dir):
 		with open(json_dir,"r") as file:
-			data = json.load(file)
-			data.update(new_data)
-		with open(json_dir,"w") as file:
-			json.dump(data,file)
-	else:
-		with open(json_dir,"w") as file:
-			json.dump(new_data,file)
+			old_data = json.load(file)
+			data.update(old_data)
+	with open(json_dir,"w") as file:
+		json.dump(data,file)
 
 
 def main(start_page=1,end_page=4):
@@ -111,14 +108,11 @@ def main(start_page=1,end_page=4):
 		count += 1
 		process(ad)
 		new_ads.append(ad)
-	new_data["ads"] = new_ads
 	dump_data()
 	driver.close()
 
 if __name__ == '__main__':
 	main()
-
-
 
 
 
