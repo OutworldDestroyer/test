@@ -12,17 +12,17 @@ import requests
 new_data = {}
 new_ads = []
 
-xpathes = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
+XPATHES = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	,"price":'//*[@id="content-container-root"]/div[2]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/h2',
 	"mileage":'//*[@class="itemval"][contains(text(),"km")]',
 	"color":'//*[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
 	"power":'//*[@class="sc-font-bold"][contains(text(),"Leistung")]/following-sibling::div'}
 
-url_part = "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #часть ссылки без номера страницы
+URL_PART= "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #часть ссылки без номера страницы
 
-current_dir  = os.getcwd()
-data_dir = os.path.join(current_dir,"data")
-json_dir = os.path.join(data_dir,"data.json")
+CURRENT_DIR  = os.getcwd()
+DATA_DIR = os.path.join(CURRENT_DIR,"data")
+JSON_DIR = os.path.join(DATA_DIR,"data.json")
 	
 options = Options()
 options.add_argument("--headless")
@@ -65,7 +65,7 @@ def get_description():
 	return description
 
 def download_images(ad):
-	image_dir = os.path.join(data_dir,str(ad["id"]))
+	image_dir = os.path.join(DATA_DIR,str(ad["id"]))
 	if not os.path.exists(image_dir):
 		os.mkdir(image_dir)
 		images = []
@@ -82,31 +82,31 @@ def download_images(ad):
 
 def dump_data():
 	new_data["ads"] = new_ads
-	if os.path.exists(json_dir):
-		with open(json_dir,"r") as file:
+	if os.path.exists(JSON_DIR):
+		with open(JSON_DIR,"r") as file:
 			data = json.load(file)
 			data.update(new_data)
-		with open(json_dir,"w") as file:
+		with open(JSON_DIR,"w") as file:
 			json.dump(data,file)
 	else:
-		with open(json_dir,"w") as file:
+		with open(JSON_DIR,"w") as file:
 			json.dump(new_data,file)
 
 
 
 def main(start_page=1,end_page=4):
-	if not os.path.exists(data_dir):
-		os.mkdir(data_dir)
+	if not os.path.exists(DATA_DIR):
+		os.mkdir(DATA_DIR)
 	for i in range (start_page,end_page+1):
 		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""} #пустое начальное объявление
-		driver.get(url_part+str(i))
+		driver.get(URL_PART+str(i))
 		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a') #первое объявление на странице
 		href = item.get_attribute('href')
 		driver.get(href)
 		ad["href"] = href
 		ad["description"] = get_description()
 		download_images(ad)
-		for name,xpath in xpathes.items():
+		for name,xpath in XPATHES.items():
 			ad[name] = get_by_xpath(name,xpath,ad)
 		process(ad)
 		new_ads.append(ad)
