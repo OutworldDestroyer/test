@@ -1,3 +1,4 @@
 requests==2.27.0
+webdriver_manager==3.5.3
 selenium==4.8.0
 
