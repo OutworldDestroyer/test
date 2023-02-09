@@ -18,7 +18,7 @@ XPATHES = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	"color":'//*[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
 	"power":'//*[@class="sc-font-bold"][contains(text(),"Leistung")]/following-sibling::div'}
 
-URL_PART= "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #часть ссылки без номера страницы
+URL_PART= "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #ссылка без номера страницы
 
 CURRENT_DIR  = os.getcwd()
 DATA_DIR = os.path.join(CURRENT_DIR,"data")
@@ -98,21 +98,19 @@ def main(start_page=1,end_page=4):
 		os.mkdir(DATA_DIR)
 	for i in range (start_page,end_page+1):
 		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""} #пустое начальное объявление
-		driver.get(URL_PART+str(i))
+		driver.get(URL_PART+str(i)) #ссылка + номер страницы
 		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a') #первое объявление на странице
 		href = item.get_attribute('href')
 		driver.get(href)
 		ad["href"] = href
 		ad["description"] = get_description()
-		download_images(ad)
 		for name,xpath in XPATHES.items():
 			ad[name] = get_by_xpath(name,xpath,ad)
 		process(ad)
+		download_images(ad)
 		new_ads.append(ad)
 	dump_data()
 	driver.close()
 
 if __name__ == '__main__':
 	main()
-
-
