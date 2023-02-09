@@ -31,14 +31,14 @@ options.add_argument('--ignore-certificate-errors')
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def process(ad):
-	ad["price"] = re.sub(r'[^0-9]+', r"", ad["price"])
+	ad["price"] = re.sub(r'[^0-9]+', "", ad["price"])
 	ad["color"] = str(ad["color"])
 	if ad["price"]:
 		ad["price"] = int(ad["price"].strip(',-'))
 	else:
 		ad["price"] = 0
 	if ad["mileage"] != 0:
-		ad["mileage"] = re.sub(r'[^0-9.]+', r'',ad["mileage"])
+		ad["mileage"] = re.sub(r'[^0-9.]+', "" ,ad["mileage"])
 		ad["mileage"] = int(float(ad["mileage"].strip()))
 	if ad["power"] != 0:
 		ad["power"] = int(ad["power"][:ad["power"].find('k')].strip())
