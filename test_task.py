@@ -31,8 +31,7 @@ options.add_argument('--ignore-certificate-errors')
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def process(ad):
-	ad["price"] = re.sub(r'[^0-9]+', "", ad["price"])
-	ad["color"] = str(ad["color"])
+	ad["price"] = re.sub(r'[^0-9]+', "", ad["price"]) #преобразование и обработка 
 	if ad["price"]:
 		ad["price"] = int(ad["price"].strip(',-'))
 	else:
