@@ -70,7 +70,7 @@ def download_images(ad):
 		for i in range(1,4): #get src of first 3 images
 			images.append(driver.find_element(By.XPATH,f'//*[@id="detpics"]/as24-pictures/div/div[2]/div/as24-carousel[1]/div[1]/div[{i}]/div/img'))
 		num = 1
-		for image in images: # скачиваем изображения
+		for image in images: # download images
 			image_src = image.get_attribute("data-src")
 			response = requests.get(image_src)
 			if response.status_code == 200:
