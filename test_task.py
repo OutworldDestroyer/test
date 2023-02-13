@@ -18,8 +18,7 @@ XPATHES = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	"color":'//*[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
 	"power":'//*[@class="sc-font-bold"][contains(text(),"Leistung")]/following-sibling::div'}
 
-URL_PART= "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #ссылка без номера страницы
-
+URL_PART= "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #link without page number
 CURRENT_DIR  = os.getcwd()
 DATA_DIR = os.path.join(CURRENT_DIR,"data")
 JSON_DIR = os.path.join(DATA_DIR,"data.json")
@@ -31,7 +30,7 @@ options.add_argument('--ignore-certificate-errors')
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def process(ad):
-	ad["price"] = re.sub(r'[^0-9]+', "", ad["price"]) #преобразование и обработка 
+	ad["price"] = re.sub(r'[^0-9]+', "", ad["price"]) #data processing
 	if ad["price"]:
 		ad["price"] = int(ad["price"].strip(',-'))
 	else:
@@ -43,7 +42,7 @@ def process(ad):
 		ad["power"] = int(ad["power"][:ad["power"].find('k')].strip())
 
 
-def get_by_xpath(name,xpath,ad): #функция возвращает текст элемента по xpath
+def get_by_xpath(name,xpath,ad): #return the text of the element by xpath
 	try:
 		elem=driver.find_element(By.XPATH,xpath).get_attribute('innerText')
 	except NoSuchElementException:
@@ -54,7 +53,7 @@ def get_by_xpath(name,xpath,ad): #функция возвращает текст
 
 def get_description():
 	description = ""
-	raw_description = driver.find_elements(By.CSS_SELECTOR,'[data-type="description"]') #необработанный список элементов описания
+	raw_description = driver.find_elements(By.CSS_SELECTOR,'[data-type="description"]') #raw list of description elements
 	if raw_description:
 		for paragraph in raw_description: #\xa0\n
 			paragraph = paragraph.get_attribute("innerText")
@@ -68,7 +67,7 @@ def download_images(ad):
 	if not os.path.exists(image_dir):
 		os.mkdir(image_dir)
 		images = []
-		for i in range(1,4): #получаем src первых 3 изображений
+		for i in range(1,4): #get src of first 3 images
 			images.append(driver.find_element(By.XPATH,f'//*[@id="detpics"]/as24-pictures/div/div[2]/div/as24-carousel[1]/div[1]/div[{i}]/div/img'))
 		num = 1
 		for image in images: # скачиваем изображения
@@ -97,9 +96,9 @@ def main(start_page=1,end_page=4):
 	if not os.path.exists(DATA_DIR):
 		os.mkdir(DATA_DIR)
 	for i in range (start_page,end_page+1):
-		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""} #пустое начальное объявление
-		driver.get(URL_PART+str(i)) #ссылка + номер страницы
-		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a') #первое объявление на странице
+		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""} #empty initial ad
+		driver.get(URL_PART+str(i)) #link + page number
+		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a') #first ad on the page
 		href = item.get_attribute('href')
 		driver.get(href)
 		ad["href"] = href
