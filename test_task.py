@@ -51,8 +51,9 @@ def get_description(tree):
 	description_elements = tree.xpath('//div[@data-type="description"]')
 	for paragraph in description_elements: 
 		description += paragraph.text_content()
-	description = description.replace('\xa0\n', ' ')
-	description = description.replace('\u00a0\r\n', ' ')
+	replace_dict = {'\xa0\n':' ','\u00a0\r\n':' '}
+	for k,v in replace_dict.items():
+		description = description.replace(k,v)
 	description = description.removesuffix('\xa0')
 	return description.casefold()
 
