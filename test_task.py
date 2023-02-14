@@ -1,9 +1,4 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.common.exceptions import NoSuchElementException
+from lxml import html
 import re 
 import json
 import os 
@@ -12,22 +7,22 @@ import requests
 new_data = {}
 new_ads = []
 
-XPATHES = {"title":'//*[@id="content-container-root"]/div[2]/div[1]/div/h1'
-	,"price":'//*[@id="content-container-root"]/div[2]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/h2',
-	"mileage":'//*[@class="itemval"][contains(text(),"km")]',
-	"color":'//*[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
-	"power":'//*[@class="sc-font-bold"][contains(text(),"Leistung")]/following-sibling::div'}
+HEADERS = {
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36 OPR/77.0.4054.172 (Edition Yx 08)'
+		}
+
+XPATHES = {"title":'//div[@id="content-container-root"]/div[2]/div[1]/div/h1'
+	,"price":'//div[@id="content-container-root"]/div[2]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/h2',
+	"mileage":'//div[@class="itemval"][contains(text(),"km")]',
+	"color":'//div[@class="sc-font-bold"][contains(text(),"Farbe")]/following-sibling::div',
+	"power":'//div[@class="sc-font-bold"][contains(text(),"Leistung")]/following-sibling::div'}
 
 URL_PART= "https://www.truckscout24.de/transporter/gebraucht/kuehl-iso-frischdienst/renault?currentpage=" #link without page number
+
 CURRENT_DIR  = os.getcwd()
 DATA_DIR = os.path.join(CURRENT_DIR,"data")
 JSON_DIR = os.path.join(DATA_DIR,"data.json")
 	
-options = Options()
-options.add_argument("--headless")
-options.add_argument('--ignore-certificate-errors')
-	
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def process(ad):
 	ad["price"] = re.sub(r'[^0-9]+', "", ad["price"]) #data processing
@@ -42,37 +37,35 @@ def process(ad):
 		ad["power"] = int(ad["power"][:ad["power"].find('k')].strip())
 
 
-def get_by_xpath(name,xpath,ad): #return the text of the element by xpath
-	try:
-		elem=driver.find_element(By.XPATH,xpath).get_attribute('innerText')
-	except NoSuchElementException:
-		if isinstance(ad[name], str):
-			return ""
-		return 0
-	return elem
+def get_by_xpath(tree,name,xpath,ad): #return the text of the element by xpath
+ 	try:
+ 		elem= tree.xpath(xpath)[0].text_content()
+ 	except IndexError:
+ 		if isinstance(ad[name], str):
+ 			return ""
+ 		return 0
+ 	return elem.casefold()
 
-def get_description():
+def get_description(tree):
 	description = ""
-	raw_description = driver.find_elements(By.CSS_SELECTOR,'[data-type="description"]') #raw list of description elements
-	if raw_description:
-		for paragraph in raw_description: #\xa0\n
-			paragraph = paragraph.get_attribute("innerText")
-			description += paragraph
+	description_elements = tree.xpath('//div[@data-type="description"]')
+	for paragraph in description_elements: 
+		description += paragraph.text_content()
 	description = description.replace('\xa0\n', ' ')
+	description = description.replace('\u00a0\r\n', ' ')
 	description = description.removesuffix('\xa0')
-	return description
+	return description.casefold()
 
-def download_images(ad):
+def download_images(tree,ad):
 	image_dir = os.path.join(DATA_DIR,str(ad["id"]))
 	if not os.path.exists(image_dir):
 		os.mkdir(image_dir)
 		images = []
 		for i in range(1,4): #get src of first 3 images
-			images.append(driver.find_element(By.XPATH,f'//*[@id="detpics"]/as24-pictures/div/div[2]/div/as24-carousel[1]/div[1]/div[{i}]/div/img'))
+			images.append(tree.xpath(f'//*[@id="detpics"]/as24-pictures/div/div[2]/div/as24-carousel[1]/div[1]/div[{i}]/div/img/@data-src'))
 		num = 1
-		for image in images: # download images
-			image_src = image.get_attribute("data-src")
-			response = requests.get(image_src)
+		for image in images:  # download images
+			response = requests.get(image[0],headers=HEADERS)
 			if response.status_code == 200:
 				with open(os.path.join(image_dir,"image"+str(num)+".jpg"), 'wb') as f:
 					f.write(response.content)
@@ -90,26 +83,27 @@ def dump_data():
 		with open(JSON_DIR,"w") as file:
 			json.dump(new_data,file)
 
-
-
 def main(start_page=1,end_page=4):
 	if not os.path.exists(DATA_DIR):
 		os.mkdir(DATA_DIR)
 	for i in range (start_page,end_page+1):
 		ad = {"id":i,"href":"","title":"","price":0,"mileage":0,"color":"","power":0,"description":""} #empty initial ad
-		driver.get(URL_PART+str(i)) #link + page number
-		item = driver.find_element(By.XPATH,'//*[@class="ls-titles"]/a') #first ad on the page
-		href = item.get_attribute('href')
-		driver.get(href)
+		response = requests.get(URL_PART+str(i),stream=True)  #get link + page number
+		response.raw.decode_content = True
+		tree = html.parse(response.raw)
+		item = tree.xpath('//a[@data-item-name="detail-page-link"]')[0] #find first ad on the page
+		href = 'https://www.truckscout24.de' + item.get('href')
+		response = requests.get(href,headers=HEADERS,stream=True) #get first ad
+		response.raw.decode_content = True
+		tree = html.parse(response.raw)
 		ad["href"] = href
-		ad["description"] = get_description()
+		ad["description"] = get_description(tree)
 		for name,xpath in XPATHES.items():
-			ad[name] = get_by_xpath(name,xpath,ad)
+			ad[name] = get_by_xpath(tree,name,xpath,ad)
 		process(ad)
-		download_images(ad)
+		download_images(tree,ad)
 		new_ads.append(ad)
 	dump_data()
-	driver.close()
 
 if __name__ == '__main__':
 	main()
