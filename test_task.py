@@ -7,9 +7,7 @@ import requests
 new_data = {}
 new_ads = []
 
-HEADERS = {
-			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36 OPR/77.0.4054.172 (Edition Yx 08)'
-		}
+
 
 XPATHES = {"title":'//div[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	,"price":'//div[@id="content-container-root"]/div[2]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/h2',
@@ -66,7 +64,7 @@ def download_images(tree,ad):
 			images.append(tree.xpath(f'//*[@id="detpics"]/as24-pictures/div/div[2]/div/as24-carousel[1]/div[1]/div[{i}]/div/img/@data-src'))
 		num = 1
 		for image in images:  # download images
-			response = requests.get(image[0],headers=HEADERS)
+			response = requests.get(image[0])
 			if response.status_code == 200:
 				with open(os.path.join(image_dir,"image"+str(num)+".jpg"), 'wb') as f:
 					f.write(response.content)
@@ -94,7 +92,7 @@ def main(start_page=1,end_page=4):
 		tree = html.parse(response.raw)
 		item = tree.xpath('//a[@data-item-name="detail-page-link"]')[0] #find first ad on the page
 		href = 'https://www.truckscout24.de' + item.get('href')
-		response = requests.get(href,headers=HEADERS,stream=True) #get first ad
+		response = requests.get(href,stream=True) #get first ad
 		response.raw.decode_content = True
 		tree = html.parse(response.raw)
 		ad["href"] = href
