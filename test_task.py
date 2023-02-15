@@ -7,8 +7,6 @@ import requests
 new_data = {}
 new_ads = []
 
-
-
 XPATHES = {"title":'//div[@id="content-container-root"]/div[2]/div[1]/div/h1'
 	,"price":'//div[@id="content-container-root"]/div[2]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/h2',
 	"mileage":'//div[@class="itemval"][contains(text(),"km")]',
