@@ -42,7 +42,7 @@ def get_by_xpath(tree,name,xpath,ad): #return the text of the element by xpath
  		if isinstance(ad[name], str):
  			return ""
  		return 0
- 	return elem.casefold()
+ 	return elem
 
 def get_description(tree):
 	description = ""
