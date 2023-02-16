@@ -44,14 +44,16 @@ def get_by_xpath(tree,name,xpath,ad): #return the text of the element by xpath
 
 def get_description(tree):
 	description = ""
+	label =  tree.xpath('//label[@for="moredata"]')[0]
+	description += label.text_content() + " "
 	description_elements = tree.xpath('//div[@data-type="description"]')
 	for paragraph in description_elements: 
 		description += paragraph.text_content()
-	replace_dict = {'\xa0\n':' ','\u00a0\r\n':' '}
+	replace_dict = {'\xa0\n':' ','\u00a0\r\n':' ','\r\n':''} #data processing
 	for k,v in replace_dict.items():
 		description = description.replace(k,v)
 	description = description.removesuffix('\xa0')
-	return description.casefold()
+	return description
 
 def download_images(tree,ad):
 	image_dir = os.path.join(DATA_DIR,str(ad["id"]))
@@ -71,13 +73,13 @@ def download_images(tree,ad):
 def dump_data():
 	new_data["ads"] = new_ads
 	if os.path.exists(JSON_DIR):
-		with open(JSON_DIR,"r") as file:
+		with open(JSON_DIR,"r",encoding="utf-8") as file:
 			data = json.load(file)
 			data.update(new_data)
-		with open(JSON_DIR,"w") as file:
+		with open(JSON_DIR,"w",encoding="utf-8") as file:
 			json.dump(data,file)
 	else:
-		with open(JSON_DIR,"w") as file:
+		with open(JSON_DIR,"w",encoding="utf-8") as file:
 			json.dump(new_data,file)
 
 def main(start_page=1,end_page=4):
@@ -104,3 +106,4 @@ def main(start_page=1,end_page=4):
 
 if __name__ == '__main__':
 	main()
+
